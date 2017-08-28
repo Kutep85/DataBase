@@ -9,10 +9,9 @@ USE `BaseDevs` ;
 -- Table `BaseDevs`.`Companies`
 -- -----------------------------------------------------
 CREATE  TABLE IF NOT EXISTS `BaseDevs`.`Companies` (
-  `idCompanies` INT NOT NULL ,
-  `Name company` VARCHAR(45) NULL ,
-  PRIMARY KEY (`idCompanies`, `Name company`) ,
-  UNIQUE INDEX `Name company_UNIQUE` (`Name company` ASC) )
+  `idCompanies` INT NOT NULL AUTO_INCREMENT ,
+  `Namecompany` VARCHAR(45) NULL ,
+  PRIMARY KEY (`idCompanies`) )
 ENGINE = InnoDB;
 
 
@@ -20,7 +19,7 @@ ENGINE = InnoDB;
 -- Table `BaseDevs`.`Customers`
 -- -----------------------------------------------------
 CREATE  TABLE IF NOT EXISTS `BaseDevs`.`Customers` (
-  `idCustomers` INT NOT NULL ,
+  `idCustomers` INT NOT NULL AUTO_INCREMENT ,
   `name_customer` VARCHAR(45) NOT NULL ,
   PRIMARY KEY (`idCustomers`, `name_customer`) ,
   UNIQUE INDEX `name_customer_UNIQUE` (`name_customer` ASC) )
@@ -32,7 +31,7 @@ ENGINE = InnoDB;
 -- -----------------------------------------------------
 CREATE  TABLE IF NOT EXISTS `BaseDevs`.`Projects` (
   `idProjects` INT NOT NULL AUTO_INCREMENT ,
-  `name project` VARCHAR(45) NULL ,
+  `name_project` VARCHAR(45) NULL ,
   `id_company` INT NULL ,
   `id_customer` INT NULL ,
   INDEX `comp` (`id_company` ASC) ,
@@ -41,13 +40,13 @@ CREATE  TABLE IF NOT EXISTS `BaseDevs`.`Projects` (
   CONSTRAINT `comp`
     FOREIGN KEY (`id_company` )
     REFERENCES `BaseDevs`.`Companies` (`idCompanies` )
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION,
+    ON DELETE SET NULL
+    ON UPDATE SET NULL,
   CONSTRAINT `cust`
     FOREIGN KEY (`id_customer` )
     REFERENCES `BaseDevs`.`Customers` (`idCustomers` )
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION)
+    ON DELETE SET NULL
+    ON UPDATE SET NULL)
 ENGINE = InnoDB;
 
 
@@ -56,16 +55,16 @@ ENGINE = InnoDB;
 -- -----------------------------------------------------
 CREATE  TABLE IF NOT EXISTS `BaseDevs`.`Developers` (
   `idDevelopers` INT NOT NULL AUTO_INCREMENT ,
-  `NameDevelopers` VARCHAR(45) NOT NULL ,
-  `SurnameDevelopers` VARCHAR(45) NOT NULL ,
+  `NameDevelopers` VARCHAR(45) NULL ,
+  `SurnameDevelopers` VARCHAR(45) NULL ,
   `id_project` INT NULL ,
-  PRIMARY KEY (`idDevelopers`, `NameDevelopers`, `SurnameDevelopers`) ,
+  PRIMARY KEY (`idDevelopers`) ,
   INDEX `proj` (`id_project` ASC) ,
   CONSTRAINT `proj`
     FOREIGN KEY (`id_project` )
     REFERENCES `BaseDevs`.`Projects` (`idProjects` )
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION)
+    ON DELETE SET NULL
+    ON UPDATE SET NULL)
 ENGINE = InnoDB
 COMMENT = 'Base of devs'
 DELAY_KEY_WRITE = 1
@@ -84,8 +83,8 @@ CREATE  TABLE IF NOT EXISTS `BaseDevs`.`Skills` (
   CONSTRAINT `id_dev`
     FOREIGN KEY (`idDevelopers` )
     REFERENCES `BaseDevs`.`Developers` (`idDevelopers` )
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION)
+    ON DELETE SET NULL
+    ON UPDATE SET NULL)
 ENGINE = InnoDB;
 
 
@@ -99,9 +98,9 @@ SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS;
 -- -----------------------------------------------------
 SET AUTOCOMMIT=0;
 USE `BaseDevs`;
-INSERT INTO `BaseDevs`.`Companies` (`idCompanies`, `Name company`) VALUES ('1', 'Zond');
-INSERT INTO `BaseDevs`.`Companies` (`idCompanies`, `Name company`) VALUES ('2', 'Luxoft');
-INSERT INTO `BaseDevs`.`Companies` (`idCompanies`, `Name company`) VALUES ('3', 'Epum');
+INSERT INTO `BaseDevs`.`Companies` (`idCompanies`, `Namecompany`) VALUES ('1', 'Zond');
+INSERT INTO `BaseDevs`.`Companies` (`idCompanies`, `Namecompany`) VALUES ('2', 'Luxoft');
+INSERT INTO `BaseDevs`.`Companies` (`idCompanies`, `Namecompany`) VALUES ('3', 'Epum');
 
 COMMIT;
 
@@ -120,11 +119,11 @@ COMMIT;
 -- -----------------------------------------------------
 SET AUTOCOMMIT=0;
 USE `BaseDevs`;
-INSERT INTO `BaseDevs`.`Projects` (`idProjects`, `name project`, `id_company`, `id_customer`) VALUES ('1', 'Inversion', '1', '2');
-INSERT INTO `BaseDevs`.`Projects` (`idProjects`, `name project`, `id_company`, `id_customer`) VALUES ('2', 'Seismic', '2', '1');
-INSERT INTO `BaseDevs`.`Projects` (`idProjects`, `name project`, `id_company`, `id_customer`) VALUES ('3', 'Logging', '2', '2');
-INSERT INTO `BaseDevs`.`Projects` (`idProjects`, `name project`, `id_company`, `id_customer`) VALUES ('4', 'Crashing', '3', '1');
-INSERT INTO `BaseDevs`.`Projects` (`idProjects`, `name project`, `id_company`, `id_customer`) VALUES ('5', 'Washing', '3', '1');
+INSERT INTO `BaseDevs`.`Projects` (`idProjects`, `name_project`, `id_company`, `id_customer`) VALUES ('1', 'Inversion', '1', '2');
+INSERT INTO `BaseDevs`.`Projects` (`idProjects`, `name_project`, `id_company`, `id_customer`) VALUES ('2', 'Seismic', '2', '1');
+INSERT INTO `BaseDevs`.`Projects` (`idProjects`, `name_project`, `id_company`, `id_customer`) VALUES ('3', 'Logging', '2', '2');
+INSERT INTO `BaseDevs`.`Projects` (`idProjects`, `name_project`, `id_company`, `id_customer`) VALUES ('4', 'Crashing', '3', '1');
+INSERT INTO `BaseDevs`.`Projects` (`idProjects`, `name_project`, `id_company`, `id_customer`) VALUES ('5', 'Washing', '3', '1');
 
 COMMIT;
 
@@ -159,5 +158,9 @@ INSERT INTO `BaseDevs`.`Skills` (`idSkills`, `Language`, `idDevelopers`) VALUES 
 INSERT INTO `BaseDevs`.`Skills` (`idSkills`, `Language`, `idDevelopers`) VALUES ('9', 'Java', '6');
 INSERT INTO `BaseDevs`.`Skills` (`idSkills`, `Language`, `idDevelopers`) VALUES ('10', 'Java', '5');
 INSERT INTO `BaseDevs`.`Skills` (`idSkills`, `Language`, `idDevelopers`) VALUES ('11', 'Python', '7');
+
+alter table developers add column salary float(4) after id_project;
+
+alter table projects add column cost float(4) after id_customer;
 
 COMMIT;
