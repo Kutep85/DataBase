@@ -8,13 +8,22 @@ import Menu.Menu;
 import Creater.Creater;
 import Creater.CreaterCompany;
 import Creater.CreaterDeveloper;
+import DAO.DeveloperDAO;
+import Dedeloper.Developer;
 
 public class Main {
 	
 	public static void main (String[] args) throws Exception {
 	
-		Menu men = new Menu();
-		men.menu();
+
+		Developer developer = new Developer();
+		developer.setName("Stas");
+		developer.setSurname("Pushkin");
+		developer.setProject("Inversion");
+		developer.setSalary(2000);
+		DeveloperDAO.addDeveloper(developer);
+		//		Menu men = new Menu();
+//		men.menu();
 /*		Creater creater = new CreaterDeveloper("Timur", "Niyaz", 4, 2000);
 		creater.create();
 		Thread.sleep(500);
