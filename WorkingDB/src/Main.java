@@ -9,7 +9,7 @@ import Creater.Creater;
 import Creater.CreaterCompany;
 import Creater.CreaterDeveloper;
 import DAO.DeveloperDAO;
-import Dedeloper.Developer;
+import Developer.Developer;
 
 public class Main {
 	
@@ -18,10 +18,14 @@ public class Main {
 
 		Developer developer = new Developer();
 		developer.setName("Stas");
-		developer.setSurname("Pushkin");
-		developer.setProject("Inversion");
+		developer.setSurname("Irushkin");
+		developer.setProject("Seismic");
 		developer.setSalary(2000);
+		//developer.setCompany("Luxoft");
 		DeveloperDAO.addDeveloper(developer);
+		System.out.println(DeveloperDAO.getDeveloper("Stas", "Irushkin"));
+	//Developer devvv = DeveloperDAO.removeDeveloper("Stas", "Pushkin");
+	//System.out.println(devvv.toString());
 		//		Menu men = new Menu();
 //		men.menu();
 /*		Creater creater = new CreaterDeveloper("Timur", "Niyaz", 4, 2000);

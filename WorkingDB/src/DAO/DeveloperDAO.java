@@ -6,10 +6,13 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
-import Dedeloper.Developer;
+import Company.Company;
+import Developer.Developer;
+import Project.Project;
 
 public class DeveloperDAO {
 
+	
 	public DeveloperDAO() {
 		// 
 	}
@@ -31,12 +34,12 @@ public class DeveloperDAO {
 				rSet = statement.executeQuery();
 				while(rSet.next()){
 					if(rSet.getString(2).equals(name) && rSet.getString(3).equals(surname)){
-						developer.setName (rSet.getString(2));
-						developer.setSurname(rSet.getString(3));
-						ResultSet rsProj = statement.executeQuery("select name_project from projects where idProjects='" + 
-									rSet.getString(4) + "';");
-						while(rsProj.next()){ developer.setProject(rsProj.getString(1));}
-						developer.setSalary(rSet.getInt(5));
+						developer.setId(rSet.getInt("idDevelopers"));
+						developer.setName (rSet.getString("NameDevelopers"));
+						developer.setSurname(rSet.getString("SurnameDevelopers"));
+						developer.setProject(getNameProj(rSet.getInt("id_project")));
+						developer.setCompany(getNameComp(rSet.getInt("id_comp")));
+						developer.setSalary(rSet.getInt("salary"));
 					}  else{
 						developer.setName("missmatch");
 					}
@@ -44,6 +47,7 @@ public class DeveloperDAO {
 			}
 			catch (SQLException e) {
 				System.err.println("Method getDeveloper. SQL request isn't correct.");
+				e.printStackTrace();
 				return developer;
 			}
 		}
@@ -68,24 +72,23 @@ public class DeveloperDAO {
 	
 	public static void setDeveloper(Developer developer) throws Exception {
 		Connection connection = null;
-		Statement statement = null;
+		PreparedStatement prStatement = null;
 		ResultSet rSet = null;
+		String sql = "update developers set  NameDevelopers=?, SurnameDeveloper=?, id_project=?, "
+				+ "id_comp=?, salary=? where idDevelopers='" + developer.getId() + "';";
 		try{
 			connection = Connector.getConnector();
 			if(connection == null){
 				System.err.println("Method setDeveloper. Connection is not established!");
 			}
 			try {
-				statement = connection.createStatement();
-				rSet = statement.executeQuery("SELECT * FROM developers;");
-				while(rSet.next()){
-					if(developer.getName().equals(rSet.getString(2)) && developer.getSurname().equals(rSet.getString(3))){
-						String sql = queryBuilderUpdate(developer, statement);
-						statement.executeUpdate(sql);
-					}  else{
-						developer.setName("missmatch");
-					}
-				}
+				prStatement = connection.prepareStatement(sql);
+					prStatement.setString(1, developer.getName());
+					prStatement.setString(2, developer.getSurname());
+					prStatement.setInt(3, getIdProj(developer.getProject()));
+					prStatement.setInt(4, getIdComp(developer.getCompany()));
+					prStatement.setInt(5, developer.getSalary());
+				prStatement.executeUpdate();
 			}
 			catch (SQLException e) {
 				System.err.println("Method setDeveloper. SQL request isn't correct.");
@@ -96,8 +99,8 @@ public class DeveloperDAO {
 				if(rSet!=null){
 					rSet.close();
 				}
-			    if(statement!=null){
-			    	statement.close();
+			    if(prStatement!=null){
+			    	prStatement.close();
 			    }
 			    if(connection!=null){
 			    	connection.close();
@@ -111,20 +114,26 @@ public class DeveloperDAO {
 	
 	public static void addDeveloper(Developer developer) throws Exception {
 		Connection connection = null;
-		Statement statement = null;
+		PreparedStatement prStatement = null;
 		ResultSet rSet = null;
+		String sql = "Insert into developers (NameDevelopers, SurnameDevelopers, id_project, id_comp, salary)"
+				+ " values (?, ?, ?, ?, ?);";
 		try{
 			connection = Connector.getConnector();
 			if(connection == null){
 				System.err.println("Method addDeveloper. Connection is not established!");
 			}
 			try {
-				statement = connection.createStatement();
-						String sql = queryBuilderAdd(developer, statement);
-						statement.executeUpdate(sql);
+				prStatement = connection.prepareStatement(sql);
+					prStatement.setString(1, developer.getName());
+					prStatement.setString(2, developer.getSurname());
+					prStatement.setInt(3, getIdProj(developer.getProject()));
+					prStatement.setInt(4, getIdCompAdd(developer.getProject()));
+					prStatement.setInt(5, developer.getSalary());
+				prStatement.executeUpdate();
 			}
 			catch (SQLException e) {
-//				System.err.println("Method addDeveloper. SQL request isn't correct.");
+				System.err.println("Method addDeveloper. SQL request isn't correct.");
 				e.printStackTrace();
 			}
 		}
@@ -133,8 +142,8 @@ public class DeveloperDAO {
 				if(rSet!=null){
 					rSet.close();
 				}
-			    if(statement!=null){
-			    	statement.close();
+			    if(prStatement!=null){
+			    	prStatement.close();
 			    }
 			    if(connection!=null){
 			    	connection.close();
@@ -147,7 +156,7 @@ public class DeveloperDAO {
 	
 	
 	public static Developer removeDeveloper(String name, String surname) throws Exception{
-		Developer developer = new Developer();
+		Developer developer = getDeveloper(name, surname);
 		Connection connection = null;
 		PreparedStatement statement = null;
 		ResultSet rSet = null;
@@ -162,7 +171,7 @@ public class DeveloperDAO {
 				statement = connection.prepareStatement(sql);
 				rSet = statement.executeQuery();
 				while(rSet.next()){
-					if(rSet.getString(2).equals(name) && rSet.getString(3).equals(surname)){
+					if(!developer.equals(null)){
 						statement.executeUpdate("DELETE FROM developers WHERE namedevelopers='" + name + 
 								"' and surnamedevelopers='" + surname + "';");
 					}  else{
@@ -171,7 +180,7 @@ public class DeveloperDAO {
 				}
 			}
 			catch (SQLException e) {
-				System.err.println("Method getDeveloper. SQL request isn't correct.");
+				System.err.println("Method removeDeveloper. SQL request isn't correct.");
 				return developer;
 			}
 		}
@@ -187,42 +196,250 @@ public class DeveloperDAO {
 			    	connection.close();
 			    }
 			} catch (SQLException e) {
-				System.err.println("Method getUser. Finally block isn't correct. Connections could be unclose!!!");
+				System.err.println("Method deleteDeveloper. Finally block isn't correct. Connections could be unclose!!!");
 			}
 		}
 		return developer;
 	}
 	
 	
-	private static String queryBuilderAdd(Developer developer, Statement statement) throws SQLException{
-		System.out.println("Method start");
-		String[] columnDim = new String[4];
-		String[] valueDim = new String[4];
+	private static Integer getIdComp(String nameComp) throws Exception {
+		Connection connection = null;
+		Statement statement = null;
+		Integer idComp = null;
+		ResultSet rsId = null;
+		try {
+			connection = Connector.getConnector();
+			statement = connection.createStatement();
+			rsId = statement.executeQuery("Select idCompanies from companies where Namecompany='" +
+					nameComp + "';");
+			if (rsId == null) {
+				Company company = new Company(nameComp);
+				CompanyDAO.addCompany(company);
+				rsId = statement.executeQuery("Select idCompanies from companies where Namecompany='" + nameComp + "';");
+				while(rsId.next()){ idComp = rsId.getInt("idCompanies");}
+			}
+			while(rsId.next()){ idComp = rsId.getInt("idCompanies");}
+		}
+		catch (SQLException e) {
+			System.err.println("Method getIdComp. SQL request isn't correct.");
+			e.printStackTrace();
+		}
+		finally{
+			try {
+				if(rsId!=null){
+					rsId.close();
+					}
+			    if(statement!=null){
+			    	statement.close();
+			    }
+			    if(connection!=null){
+			    	connection.close();
+			    }
+			}catch (SQLException e) {
+					System.err.println("Method getIdComp. Finally block isn't correct. Connections could be unclose!!!");
+			}
+		}
+		return idComp;
+	}
+	
+	
+	public static String getNameComp(Integer idComp) throws Exception {
+		Connection connection = null;
+		Statement statement = null;
+		String nameComp = null;
+		ResultSet rsName = null;
+		try {
+			connection = Connector.getConnector();
+			statement = connection.createStatement();
+			rsName = statement.executeQuery("Select Namecompany from companies where idCompanies='" +
+					idComp + "';");
+			while(rsName.next()){ nameComp = rsName.getString("Namecompany");}
+		}
+		catch (SQLException e) {
+			System.err.println("Method getNameComp. SQL request isn't correct.");
+			e.printStackTrace();
+		}
+		finally{
+			try {
+				if(rsName!=null){
+					rsName.close();
+					}
+			    if(statement!=null){
+			    	statement.close();
+			    }
+			    if(connection!=null){
+			    	connection.close();
+			    }
+			}catch (SQLException e) {
+					System.err.println("Method getNameComp. Finally block isn't correct. Connections could be unclose!!!");
+			}
+		}
+		return nameComp;
+	}
+	
+	
+	private static Integer getIdCompAdd(String nameProj) throws Exception {
+		Connection connection = null;
+		Statement statement = null;
+		Integer idComp = null;
+		ResultSet rsId = null;
+		try {
+			connection = Connector.getConnector();
+			statement = connection.createStatement();
+			rsId = statement.executeQuery("Select id_company from projects where name_project='" +
+					nameProj + "';");
+			while(rsId.next()){ idComp = rsId.getInt("id_company");}
+		}
+		catch (SQLException e) {
+			System.err.println("Method getIdComp. SQL request isn't correct.");
+			e.printStackTrace();
+		}
+		finally{
+			try {
+				if(rsId!=null){
+					rsId.close();
+					}
+			    if(statement!=null){
+			    	statement.close();
+			    }
+			    if(connection!=null){
+			    	connection.close();
+			    }
+			}catch (SQLException e) {
+					System.err.println("Method getIdComp. Finally block isn't correct. Connections could be unclose!!!");
+			}
+		}
+		return idComp;
+	}
+	
+	
+	private static Integer getIdProj(String nameProj) throws Exception {
+		Connection connection = null;
+		Statement statement = null;
+		Integer idProj = null;
+		ResultSet rsId = null;
+		try {
+			connection = Connector.getConnector();
+			statement = connection.createStatement();
+			rsId = statement.executeQuery("Select idProjects from projects where name_project='" +
+					nameProj + "';");
+			if (rsId == null) {
+				Project project = new Project(nameProj);
+				ProjectDAO.addProject(project);
+				rsId = statement.executeQuery("Select idProjects from projects where name_project='" +
+						nameProj + "';");
+				while(rsId.next()){ idProj = rsId.getInt("idProjects");}
+			}
+			while(rsId.next()){ idProj = rsId.getInt("idProjects");}
+		}
+		catch (SQLException e) {
+			System.err.println("Method getIdProj. SQL request isn't correct.");
+			e.printStackTrace();
+		}
+		finally{
+			try {
+				if(rsId!=null){
+					rsId.close();
+					}
+			    if(statement!=null){
+			    	statement.close();
+			    }
+			    if(connection!=null){
+			    	connection.close();
+			    }
+			}catch (SQLException e) {
+					System.err.println("Method getIdProj. Finally block isn't correct. Connections could be unclose!!!");
+			}
+		}
+		return idProj;
+	}
+	
+	
+	public static String getNameProj(Integer idProj) throws Exception {
+		Connection connection = null;
+		Statement statement = null;
+		String nameProj = null;
+		ResultSet rsName = null;
+		try {
+			connection = Connector.getConnector();
+			statement = connection.createStatement();
+			rsName = statement.executeQuery("Select name_project from projects where idProjects='" +
+					idProj + "';");
+			while(rsName.next()){ nameProj = rsName.getString("name_project");}
+		}
+		catch (SQLException e) {
+			System.err.println("Method getNameProj. SQL request isn't correct.");
+			e.printStackTrace();
+		}
+		finally{
+			try {
+				if(rsName!=null){
+					rsName.close();
+					}
+				if(statement!=null){
+			    	statement.close();
+			    }
+			    if(connection!=null){
+			    	connection.close();
+			    }
+			}catch (SQLException e) {
+					System.err.println("Method getNameProj. Finally block isn't correct. Connections could be unclose!!!");
+			}
+		}
+		return nameProj;
+	}
+	
+	
+/*	private static String queryBuilderAdd(Developer developer, Statement statement) throws SQLException{
+		String[] columnDim = new String[5];
+		String[] valueDim = new String[5];
 		String idPr = null;
-		ResultSet rsIdPr = statement.executeQuery("Select idProjects from projects where name_project='" +
-				developer.getProject() + "';");
-		while(rsIdPr.next()){ idPr = rsIdPr.getString(1);}
+		String idComp = null;
+		ResultSet rsId = null;
 		int count = 0;
-		
-		if (!developer.getName().equals(null)) {
-			columnDim[count] = "namedevelopers";
-			valueDim[count] = "'" + developer.getName() + "'";
-			count++;
+		try {
+			rsId = statement.executeQuery("Select idProjects from projects where name_project='" +
+					developer.getProject() + "';");
+			while(rsId.next()){ idPr = rsId.getString(1);}
+			rsId.close();
+			rsId = statement.executeQuery("Select idCompanies from companies where Namecompany='" +
+					developer.getCompany() + "';");
+			while(rsId.next()){ idComp = rsId.getString(1);}
+			if (!developer.getName().equals(null)) {
+				columnDim[count] = "namedevelopers";
+				valueDim[count] = "'" + developer.getName() + "'";
+				count++;
+			}
+			if (!developer.getSurname().equals(null)) {
+				columnDim[count] = "surnamedevelopers";
+				valueDim[count] = "'" + developer.getSurname() + "'";
+				count++;
+			}
+			if (!developer.getProject().equals(null)) {
+				columnDim[count] = "id_project";
+				valueDim[count] = "'" + idPr + "'";
+				count++;
+			}
+			if (!developer.getCompany().equals(null)) {
+				columnDim[count] = "id_comp";
+				valueDim[count] = "'" + idComp + "'";
+				count++;
+			}
+			if (!developer.getSalary().equals(null)) {
+				columnDim[count] = "salary";
+				valueDim[count] = "'" + developer.getSalary() + "'";
+				count++;
+			}
 		}
-		if (!developer.getSurname().equals(null)) {
-			columnDim[count] = "surnamedevelopers";
-			valueDim[count] = "'" + developer.getSurname() + "'";
-			count++;
-		}
-		if (!developer.getProject().equals(null)) {
-			columnDim[count] = "id_project";
-			valueDim[count] = "'" + idPr + "'";
-			count++;
-		}
-		if (!developer.getSalary().equals(null)) {
-			columnDim[count] = "salary";
-			valueDim[count] = "'" + developer.getSalary() + "'";
-			count++;
+		finally{
+			try {
+				if(rsId!=null){
+					rsId.close();
+					} 
+			}catch (SQLException e) {
+					System.err.println("Method getUser. Finally block isn't correct. Connections could be unclose!!!");
+			}
 		}
 		
 		String columns = "";
@@ -238,44 +455,65 @@ public class DeveloperDAO {
 			}
 		}
 		String query = "Insert into developers (" + columns + ") values (" + values + ");";
-		System.out.println(query);
 		return query;
 	}
 	
 	
 	private static String queryBuilderUpdate (Developer developer, Statement statement) throws SQLException {
-		String[] columnDim = new String[4];
-		String[] valueDim = new String[4];
+		String[] columnDim = new String[5];
+		String[] valueDim = new String[5];
 		String idPr = null;
+		String idComp = null;
 		String idDev = null;
-		ResultSet rsIdDev = statement.executeQuery("Select idDevelopers from developers where nameDevelopers='" +
-				developer.getName() + "' and surnameDevelopers='" + developer.getSurname() + "';");
-		while(rsIdDev.next()){ idDev = rsIdDev.getString(1);}
-		ResultSet rsIdPr = statement.executeQuery("Select idProjects from projects where name_project='" +
-				developer.getProject() + "';");
-		while(rsIdPr.next()){ idPr = rsIdPr.getString(1);}
+		ResultSet rsId = null;
 		int count = 0;
-		
-		if (!developer.getName().equals(null)) {
-			columnDim[count] = "namedevelopers";
-			valueDim[count] = "'" + developer.getName() + "'";
-			count++;
+		try {
+			rsId = statement.executeQuery("Select idDevelopers from developers where nameDevelopers='" +
+					developer.getName() + "' and surnameDevelopers='" + developer.getSurname() + "';");
+			while(rsId.next()){ idDev = rsId.getString(1);}
+			rsId.close();
+			rsId = statement.executeQuery("Select idProjects from projects where name_project='" +
+					developer.getProject() + "';");
+			while(rsId.next()){ idPr = rsId.getString(1);}
+			rsId = statement.executeQuery("Select idCompanies from companies where Namecompany='" +
+					developer.getCompany() + "';");
+			while(rsId.next()){ idComp = rsId.getString(1);}
+			
+			if (!developer.getName().equals(null)) {
+				columnDim[count] = "namedevelopers";
+				valueDim[count] = "'" + developer.getName() + "'";
+				count++;
+			}
+			if (!developer.getSurname().equals(null)) {
+				columnDim[count] = "surnamedevelopers";
+				valueDim[count] = "'" + developer.getSurname() + "'";
+				count++;
+			}
+			if (!developer.getProject().equals(null)) {
+				developer.setProject(rsId.getString(5));
+				columnDim[count] = "id_project";
+				valueDim[count] = "'" + idPr + "'";
+				count++;
+			}
+			if (!developer.getCompany().equals(null)) {
+				columnDim[count] = "id_comp";
+				valueDim[count] = "'" + idComp + "'";
+				count++;
+			}
+			if (!developer.getSalary().equals(null)) {
+				columnDim[count] = "salary";
+				valueDim[count] = "'" + developer.getSalary() + "'";
+				count++;
+			}
 		}
-		if (!developer.getSurname().equals(null)) {
-			columnDim[count] = "surnamedevelopers";
-			valueDim[count] = "'" + developer.getSurname() + "'";
-			count++;
-		}
-		if (!developer.getProject().equals(null)) {
-			developer.setProject(rsIdPr.getString(5));
-			columnDim[count] = "id_project";
-			valueDim[count] = "'" + idPr + "'";
-			count++;
-		}
-		if (!developer.getSalary().equals(null)) {
-			columnDim[count] = "salary";
-			valueDim[count] = "'" + developer.getSalary() + "'";
-			count++;
+		finally{
+			try {
+				if(rsId!=null){
+					rsId.close();
+					} 
+			}catch (SQLException e) {
+					System.err.println("Method getUser. Finally block isn't correct. Connections could be unclose!!!");
+			}
 		}
 		
 		String command = "";
@@ -290,5 +528,5 @@ public class DeveloperDAO {
 		
 		String query = "update developers set " + command + " where idDevelopers='" + idDev + "';";
 		return query;
-	}
+	}*/
 }
